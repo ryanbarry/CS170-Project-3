@@ -130,6 +130,7 @@
 #define I_TYPE          0170000	/* this field gives inode type */
 #define I_UNIX_SOCKET	0140000 /* unix domain socket */
 #define I_SYMBOLIC_LINK 0120000	/* file is a symbolic link */
+#define I_IMMEDIATE		0110000 /* immediate file */
 #define I_REGULAR       0100000	/* regular file, not dir or special */
 #define I_BLOCK_SPECIAL 0060000	/* block special file */
 #define I_DIRECTORY     0040000	/* file is a directory */

@@ -120,6 +120,7 @@ PRIVATE int common_open(register int oflags, mode_t omode)
 	if ((r = forbidden(vp, bits)) == OK) {
 		/* Opening reg. files, directories, and special files differ */
 		switch (vp->v_mode & I_TYPE) {
+		   case I_IMMEDIATE:
 		   case I_REGULAR:
 		   	/* Truncate regular file if O_TRUNC. */
 		   	if (oflags & O_TRUNC) {

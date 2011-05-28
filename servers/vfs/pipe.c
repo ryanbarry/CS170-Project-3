@@ -629,7 +629,9 @@ PUBLIC int select_request_pipe(struct filp *f, int *ops, int block)
 PUBLIC int select_match_pipe(struct filp *f)
 {
 	/* recognize either pipe or named pipe (FIFO) */
-	if (f && f->filp_vno && (f->filp_vno->v_mode & I_NAMED_PIPE))
+	/* had to add special check since I_NAMED_PIPE and I_IMMEDIATE use the same bit,
+	   I_IMMEDIATE is a subtype of I_REGULAR, so that's how we make sure its not I_IMMEDIATE */
+	if (f && f->filp_vno && (f->filp_vno->v_mode & I_NAMED_PIPE) && !(f->filp_vno->v_mode & I_REGULAR))
 		return 1;
 	return 0;
 }

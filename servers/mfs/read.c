@@ -45,7 +45,8 @@ PUBLIC int fs_readwrite(void)
 	return(EINVAL);
 
   mode_word = rip->i_mode & I_TYPE;
-  regular = (mode_word == I_REGULAR || mode_word == I_NAMED_PIPE);
+  /* immediate files are regular files too! */
+  regular = (mode_word == I_REGULAR || mode_word == I_IMMEDIATE || mode_word == I_NAMED_PIPE);
   block_spec = (mode_word == I_BLOCK_SPECIAL ? 1 : 0);
   
   /* Determine blocksize */
@@ -76,7 +77,13 @@ PUBLIC int fs_readwrite(void)
 	   */
 	  if(position > f_size) clear_zone(rip, f_size, 0);
   }
-	      
+	
+	if((rip->i_mode & I_TYPE) == I_IMMEDIATE)
+	{
+    if(rw_flag == WRITING) printf("fs_readwrite() WRITING to immediate file\n");
+    else printf("fs_readwrite() READING from immediate file\n");
+	}
+	
   cum_io = 0;
   /* Split the transfer into chunks that don't span two blocks. */
   while (nrbytes > 0) {

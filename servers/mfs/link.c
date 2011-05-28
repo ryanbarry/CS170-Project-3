@@ -530,12 +530,15 @@ off_t newsize;			/* inode must become this size */
 
   /* Free the actual space if truncating. */
   if(newsize < rip->i_size) {
-  	if ((r = freesp_inode(rip, newsize, rip->i_size)) != OK)
+    if((rip->i_mode & I_TYPE) == I_IMMEDIATE) {
+      printf("truncate_inode() called on immedate file inode\n");
+    }
+  	else if ((r = freesp_inode(rip, newsize, rip->i_size)) != OK)
   		return(r);
   }
 
   /* Clear the rest of the last zone if expanding. */
-  if(newsize > rip->i_size) clear_zone(rip, rip->i_size, 0);
+  else if(newsize > rip->i_size) clear_zone(rip, rip->i_size, 0);
 
   /* Next correct the inode size. */
   rip->i_size = newsize;
