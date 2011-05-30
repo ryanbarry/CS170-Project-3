@@ -313,6 +313,10 @@ off_t position;			/* position in file whose blk wanted */
   block_t b;
   unsigned long excess, zone, block_pos;
   
+  /* support immediate files - easy since they don't have any blocks! */
+  if((rip->i_mode & I_TYPE) == I_IMMEDIATE)
+    return(NO_BLOCK);
+  
   scale = rip->i_sp->s_log_zone_size;	/* for block-zone conversion */
   block_pos = position/rip->i_sp->s_block_size;	/* relative blk # in file */
   zone = block_pos >> scale;	/* position's zone */
