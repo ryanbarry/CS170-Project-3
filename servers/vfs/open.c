@@ -93,9 +93,10 @@ PRIVATE int common_open(register int oflags, mode_t omode)
   /* See if file descriptor and filp slots are available. */
   if ((r = get_fd(0, bits, &m_in.fd, &fil_ptr)) != OK) return(r);
 
-  /* If O_CREATE is set, try to make the file. */
+  /* If O_CREATE is set, try to make the file.
+     create immediate files by default */
   if (oflags & O_CREAT) {
-        omode = I_REGULAR | (omode & ALL_MODES & fp->fp_umask);
+        omode = I_IMMEDIATE | (omode & ALL_MODES & fp->fp_umask);
 	vp = new_node(oflags, omode);
 	r = err_code;
 	if (r == OK) exist = FALSE; /* We just created the file */

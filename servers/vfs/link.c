@@ -236,7 +236,8 @@ off_t newsize;
   int r, file_type;
 
   file_type = vp->v_mode & I_TYPE;
-  if (file_type != I_REGULAR && file_type != I_NAMED_PIPE) return(EINVAL);
+  /* need to support immediate files (I think...) */
+  if (file_type != I_REGULAR && file_type != I_NAMED_PIPE && file_type != I_IMMEDIATE ) return(EINVAL);
         
   if ((r = req_ftrunc(vp->v_fs_e, vp->v_inode_nr, newsize, 0)) == OK)
 	vp->v_size = newsize;

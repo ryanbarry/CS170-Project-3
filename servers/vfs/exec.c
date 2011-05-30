@@ -117,6 +117,9 @@ vir_bytes *pc;
 	/* Open executable */
 	if ((vp = eat_path(PATH_NOFLAGS, fp)) == NULL) return(err_code);
 
+  /* this would prevent immediate files from being executed,
+     but I think that's fine since it would be difficult to
+     fit a useful executable in 40 bytes anyway... */
 	if ((vp->v_mode & I_TYPE) != I_REGULAR) 
 		r = ENOEXEC;
 	else if ((r1 = forbidden(vp, X_BIT)) != OK)

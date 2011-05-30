@@ -204,7 +204,8 @@ PUBLIC int do_fcntl()
 	struct flock flock_arg;
 	signed long offset;
 
-	/* Check if it's a regular file. */
+	/* Check if it's a regular file.
+	[I'm just gonna leave this unsupported on immediate files for now] */
 	if((f->filp_vno->v_mode & I_TYPE) != I_REGULAR) return(EINVAL);
 	if (!(f->filp_mode & W_BIT)) return(EBADF);
 
