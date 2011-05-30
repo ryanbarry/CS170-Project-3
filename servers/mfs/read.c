@@ -17,6 +17,8 @@ FORWARD _PROTOTYPE( int rw_chunk, (struct inode *rip, u64_t position,
 	unsigned off, size_t chunk, unsigned left, int rw_flag,
 	cp_grant_id_t gid, unsigned buf_off, unsigned int block_size,
 	int *completed)							);
+FORWARD _PROTOTYPE( int rw_immed, (struct inode *rip, unsigned off,
+  size_t chunk, int rw_flag, cp_grant_id_t gid, unsigned buf_off) );
 
 PRIVATE char getdents_buf[GETDENTS_BUFSIZ];
 
@@ -77,14 +79,76 @@ PUBLIC int fs_readwrite(void)
 	   */
 	  if(position > f_size) clear_zone(rip, f_size, 0);
   }
+  
+  cum_io = 0;
 	
 	if((rip->i_mode & I_TYPE) == I_IMMEDIATE)
 	{
-    if(rw_flag == WRITING) printf("fs_readwrite() WRITING to immediate file\n");
-    else printf("fs_readwrite() READING from immediate file\n");
+    int sanity = 0;
+    if(f_size > 40) printf("This immediate file is larger than 40 bytes!\n");
+    
+    if(rw_flag == WRITING)
+    {  
+      printf("fs_readwrite() WRITING to immediate file\n");
+        
+      /* is the file going to need to be upconverted from immediate to regular? */
+      if((f_size + nrbytes) > 40)
+      {
+        char tmp[40];
+        int i;
+        for(i = 0; i < f_size; i++)
+        {
+          tmp[i] = ((char *)rip->i_zone) + i;
+        }
+        /* clear inode since it will now hold pointers rather than data */
+        wipe_inode(rip);
+        r = rw_chunk(rip, 0, 0, f_size, f_size, WRITING, gid, cum_io, block_size, &completed);
+        if(r != OK || rdwt_err != OK)
+        {
+          /* write failed... not. good. */
+          printf("Error writing new block for immediate file while converting to regular file!\n");
+        }
+        else
+        {
+          cum_io += (unsigned int)completed;
+          position += completed;
+          f_size = rip->i_size;
+          rip->i_mode = (I_REGULAR | (rip->i_mode & ALL_MODES));
+        }
+      }
+      /* the file will not grow over 40 bytes */
+      else
+      {
+        sanity = 1;
+      }
+    }
+    else
+    {
+      printf("fs_readwrite() READING from immediate file\n");
+      
+      bytes_left = f_size - position;
+      /* if the position is past the end of the file, it is already too late... */
+      if(bytes_left > 0)
+      {
+        sanity = 1;
+        /* don't read past the EOF, just right up to it */
+        if(nrbytes > bytes_left) nrbytes = bytes_left;
+      }
+    }
+    
+    if(sanity)
+    {
+      r = rw_immed(rip, position, nrbytes, rw_flag, gid, cum_io);
+      if(r == OK)
+      {
+        cum_io += nrbytes;
+        position += nrbytes;
+        /* no more bytes left to read */
+        nrbytes = 0;
+      }
+    }
 	}
 	
-  cum_io = 0;
   /* Split the transfer into chunks that don't span two blocks. */
   while (nrbytes > 0) {
 	  off = ((unsigned int) position) % block_size; /* offset in blk*/
@@ -294,6 +358,33 @@ int *completed;			/* number of bytes copied */
   return(r);
 }
 
+/*===========================================================================*
+ *				rw_immed				     *
+ *===========================================================================*/
+PRIVATE int rw_immed(rip, off, chunk, rw_flag, gid, buf_off)
+register struct inode *rip;	/* pointer to inode for file to be rd/wr */
+unsigned off;			/* off within the current block */
+unsigned int chunk;		/* number of bytes to read or write */
+int rw_flag;			/* READING or WRITING */
+cp_grant_id_t gid;		/* grant */
+unsigned buf_off;		/* offset in grant */
+{
+  int r = OK;
+  
+  if(rw_flag == READING)
+  {
+    r = sys_safecopyto(VFS_PROC_NR, gid, (vir_bytes) buf_off,
+           (vir_bytes) (rip->i_zone+off), (size_t) chunk, D);
+  }
+  else
+  {
+    r = sys_safecopyfrom(VFS_PROC_NR, gid, (vir_bytes) buf_off,
+             (vir_bytes) (rip->i_zone+off), (size_t) chunk, D);
+    rip->i_dirt = DIRTY;
+  }
+  
+  return(r);
+}
 
 /*===========================================================================*
  *				read_map				     *
