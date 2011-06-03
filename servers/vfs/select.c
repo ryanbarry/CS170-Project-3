@@ -264,7 +264,7 @@ PRIVATE int select_request_file(struct filp *f, int *ops, int block)
 PRIVATE int select_match_file(struct filp *file)
 {
   /* support immediate files - I'm not really sure what this function does, but... */
-  return(file && file->filp_vno && ((file->filp_vno->v_mode & I_REGULAR) || (file->filp_vno->v_mode & I_IMMEDIATE));
+  return(file && file->filp_vno && ((file->filp_vno->v_mode & I_REGULAR) || (file->filp_vno->v_mode & I_IMMEDIATE)));
 }
 
 

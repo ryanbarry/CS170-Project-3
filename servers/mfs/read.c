@@ -85,36 +85,47 @@ PUBLIC int fs_readwrite(void)
 	if((rip->i_mode & I_TYPE) == I_IMMEDIATE)
 	{
     int sanity = 0;
-    if(f_size > 40) printf("This immediate file is larger than 40 bytes!\n");
+    if(f_size > 40) printf("Immediate file is larger than 40 bytes!\n");
     
     if(rw_flag == WRITING)
     {  
-      printf("fs_readwrite() WRITING to immediate file\n");
+      /* printf("fs_readwrite() WRITING to immediate file\n"); */
         
       /* is the file going to need to be upconverted from immediate to regular? */
       if((f_size + nrbytes) > 40)
       {
         char tmp[40];
-        int i;
+        register int i;
+        register struct buf *bp;
+        
         for(i = 0; i < f_size; i++)
         {
-          tmp[i] = ((char *)rip->i_zone) + i;
+          tmp[i] = *(((char *)rip->i_zone) + i);
         }
-        /* clear inode since it will now hold pointers rather than data */
-        wipe_inode(rip);
-        r = rw_chunk(rip, 0, 0, f_size, f_size, WRITING, gid, cum_io, block_size, &completed);
-        if(r != OK || rdwt_err != OK)
+        
+        /* clear inode since it will now hold pointers rather than data (copied from wipe_inode()) */
+        rip->i_size = 0;
+        rip->i_update = ATIME | CTIME | MTIME;	/* update all times later */
+        rip->i_dirt = DIRTY;
+        for (i = 0; i < V2_NR_TZONES; i++) rip->i_zone[i] = NO_ZONE;
+        
+        /* Writing to a nonexistent block. Create and enter in inode.*/
+    		if ((bp = new_block(rip, (off_t) 0)) == NULL)
+    			panic("bp not valid in fs_readwrite immediate growth; this can't be happening!");
+    		
+    		/* copy data to bp->data */
+    		for(i = 0; i < f_size; i++)
         {
-          /* write failed... not. good. */
-          printf("Error writing new block for immediate file while converting to regular file!\n");
+          bp->b_data[i] = tmp[i];
         }
-        else
-        {
-          cum_io += (unsigned int)completed;
-          position += completed;
-          f_size = rip->i_size;
-          rip->i_mode = (I_REGULAR | (rip->i_mode & ALL_MODES));
-        }
+    		
+        bp->b_dirt = DIRTY;
+    		
+        put_block(bp, PARTIAL_DATA_BLOCK);	
+    		
+        position += f_size;
+        f_size = rip->i_size;
+        rip->i_mode = (I_REGULAR | (rip->i_mode & ALL_MODES));
       }
       /* the file will not grow over 40 bytes */
       else
@@ -124,7 +135,7 @@ PUBLIC int fs_readwrite(void)
     }
     else
     {
-      printf("fs_readwrite() READING from immediate file\n");
+      /* printf("fs_readwrite() READING from immediate file\n"); */
       
       bytes_left = f_size - position;
       /* if the position is past the end of the file, it is already too late... */
