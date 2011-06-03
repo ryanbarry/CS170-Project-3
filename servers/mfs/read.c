@@ -85,7 +85,7 @@ PUBLIC int fs_readwrite(void)
 	if((rip->i_mode & I_TYPE) == I_IMMEDIATE)
 	{
     int sanity = 0;
-    if(f_size > 40) printf("Immediate file is larger than 40 bytes!\n");
+    if(f_size > 40) printf("Immediate file is %d bytes!\n", f_size);
     
     if(rw_flag == WRITING)
     {  

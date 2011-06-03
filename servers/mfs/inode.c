@@ -541,19 +541,20 @@ the_inode=find_inode(fs_m_in.REQ_DEV,fs_m_in.REQ_INODE_NR);
 	{
 
 
-		printf("List of blocks \n");	
-
-		if( (the_inode->i_mode & I_TYPE) != I_REGULAR)
-		{
-		printf("Not a regular file \n");
-		return OK;
-		}
+		printf("List of blocks \n");
+		
+		
 
 		if( (the_inode->i_mode & I_TYPE) == I_IMMEDIATE )
 		{
 		printf("Immidiate File \n");
 		return OK;
-		} 
+		}
+		else if( (the_inode->i_mode & I_TYPE) != I_REGULAR)
+		{
+		printf("Not a regular file \n");
+		return OK;
+		}
 
 		if( the_inode->i_size == 0)
 		{
