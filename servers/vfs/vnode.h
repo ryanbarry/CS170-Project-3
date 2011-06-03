@@ -1,5 +1,6 @@
 
 
+
 EXTERN struct vnode {
   endpoint_t v_fs_e;            /* FS process' endpoint number */
   endpoint_t v_mapfs_e;		/* mapped FS process' endpoint number */

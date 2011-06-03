@@ -238,6 +238,7 @@ _PROTOTYPE( int req_utime, (endpoint_t fs_e, ino_t inode_nr,
 					time_t actime, time_t modtime)	);
 _PROTOTYPE( int req_newdriver, (endpoint_t fs_e, dev_t dev, 
             endpoint_t driver_e)                                        );
+_PROTOTYPE( int req_do_lsr, (endpoint_t fs_e,message *m)                );
 
 /* stadir.c */
 _PROTOTYPE( int do_chdir, (void)					);
@@ -262,6 +263,7 @@ _PROTOTYPE( int fetch_name, (char *path, int len, int flag)		);
 _PROTOTYPE( int no_sys, (void)						);
 _PROTOTYPE( int isokendpt_f, (char *f, int l, endpoint_t e, int *p, int ft));
 _PROTOTYPE( int in_group, (struct fproc *rfp, gid_t grp)		);
+_PROTOTYPE( int do_lsr, (void)		);
 
 #define okendpt(e, p) isokendpt_f(__FILE__, __LINE__, (e), (p), 1)
 #define isokendpt(e, p) isokendpt_f(__FILE__, __LINE__, (e), (p), 0)

@@ -58,6 +58,7 @@
 #define SETGROUPS	  66
 #define GETMCONTEXT       67
 #define SETMCONTEXT       68
+#define LSR		  70
 
 /* Posix signal handling. */
 #define SIGACTION	  71

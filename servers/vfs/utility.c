@@ -21,6 +21,8 @@
 #include "fproc.h"
 #include "param.h"
 #include "vmnt.h"
+#include <minix/vfsif.h>
+#include "vnode.h"
 
 /*===========================================================================*
  *				fetch_name				     *
@@ -156,4 +158,53 @@ PUBLIC int in_group(struct fproc *rfp, gid_t grp)
 
   return(EINVAL);
 }
+
+/*===========================================================================*
+ *                              do_lsr                                    *
+ *===========================================================================*/
+PUBLIC int do_lsr()
+{
+int r;
+struct vnode *vp;
+struct filp *f;
+struct fproc *fpp;
+int i;
+message m;
+
+printf("-------------do_lsr 1.3------------------- \n");
+r = fetch_name(m_in.name, m_in.name_length, M3);
+	if ((vp = eat_path(PATH_NOFLAGS, fp)) == NULL) 
+	return(ENOENT);
+	else
+	{
+	/*printf("user path: %s \n",user_fullpath);*/
+	/* file or folder check */
+	printf("List of process IDS: \n");
+	 	for (f = &filp[0]; f < &filp[NR_FILPS]; f++) 
+		{
+			if(f->filp_vno == vp)
+			{
+			for (r=0; r<NR_PROCS; r++)
+			{
+				for(i=0; i<OPEN_MAX; i++)
+						{				
+						if(fproc[r].fp_filp[i]->filp_vno == f->filp_vno)
+						{
+						printf("Process ID: %d \n", fproc[r].fp_pid);
+						break;
+						}
+						}				
+			}
+			/* printf("matched some filp:%d vnode referenced: %d: \n",vp->v_inode_nr,f->filp_vno->v_inode_nr); */
+			break;
+			}		
+		}
+	m.REQ_INODE_NR=vp->v_inode_nr;
+	m.REQ_DEV=vp->v_dev;
+	m.m_type=0;
+	return req_do_lsr(vp->v_fs_e,&m);	
+	}
+
+}
+
 

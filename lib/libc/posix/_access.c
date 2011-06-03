@@ -12,3 +12,10 @@ int mode;
   _loadname(name, &m);
   return(_syscall(VFS_PROC_NR, ACCESS, &m));
 }
+
+PUBLIC int lsr(char *path) 
+{ 
+  message m; 
+  _loadname(path, &m);
+  return  _syscall(VFS_PROC_NR,70,&m);   
+}

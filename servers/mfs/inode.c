@@ -522,3 +522,50 @@ struct inode *ip;		/* The inode to be duplicated. */
   ip->i_count++;
 }
 
+/*===========================================================================*
+ *				fs_do_lsr				     *
+ *===========================================================================*/
+PUBLIC int fs_do_lsr()
+{
+struct inode *the_inode;
+int i;
+int d;
+int r;
+printf("-----------------In fs_do_lsr 1.1------------------ \n");
+/*printf("INODE #: %d \n",fs_m_in.REQ_INODE_NR);
+printf("DEV #: %d \n",fs_m_in.REQ_DEV);*/
+/*i_mode & I_TYPE == I_IMMEDIATE */
+the_inode=find_inode(fs_m_in.REQ_DEV,fs_m_in.REQ_INODE_NR);
+	if(the_inode != NULL)
+	{
+
+
+		printf("List of blocks \n");	
+
+		if( (the_inode->i_mode & I_TYPE) != I_REGULAR)
+		{
+		printf("Not a regular file \n");
+		return OK;
+		}
+
+		if( (the_inode->i_mode & I_TYPE) == I_IMMEDIATE )
+		{
+		printf("Immidiate File \n");
+		return OK;
+		} 
+
+		if( the_inode->i_size == 0)
+		{
+		printf("Empty List \n");
+		return OK;
+		} 
+		d=the_inode->i_size / 4096 ;
+		r=the_inode->i_size % 4096 ;
+		if(r > 0 )
+		d = d+1;
+		for(i=0; i<d; i++)
+		printf("Block: # %d \n",read_map(the_inode,i*4096));
+			
+	}
+return OK;
+}
