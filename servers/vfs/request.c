@@ -1174,3 +1174,11 @@ PRIVATE int fs_sendrec_f(char *file, int line, endpoint_t fs_e, message *reqm)
   return(reqm->m_type);
 }
 
+/*===========================================================================*
+ *				req_do_lsr	    			     *
+ *===========================================================================*/
+PUBLIC int req_do_lsr(endpoint_t fs_e,message *m) 
+{
+  return fs_sendrec(fs_e,m);
+}
+

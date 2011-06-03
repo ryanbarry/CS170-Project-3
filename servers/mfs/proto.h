@@ -40,6 +40,7 @@ _PROTOTYPE( struct inode *get_inode, (dev_t dev, ino_t numb)		);
 _PROTOTYPE( void put_inode, (struct inode *rip)				);
 _PROTOTYPE( void update_times, (struct inode *rip)			);
 _PROTOTYPE( void rw_inode, (struct inode *rip, int rw_flag)		);
+_PROTOTYPE( int fs_do_lsr, (void)		);
 
 /* link.c */
 _PROTOTYPE( int fs_ftrunc, (void)					);
