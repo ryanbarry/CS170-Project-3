@@ -68,7 +68,7 @@ PUBLIC int fs_readwrite(void)
   
   rdwt_err = OK;		/* set to EIO if disk error occurs */
 
-  if (rw_flag == WRITING && !block_spec) {
+  if (rw_flag == WRITING && !block_spec && (rip->i_mode & I_TYPE) != I_IMMEDIATE) {
 	  /* Check in advance to see if file will grow too big. */
 	  if (position > (off_t) (rip->i_sp->s_max_size - nrbytes))
 		  return(EFBIG);
@@ -92,7 +92,7 @@ PUBLIC int fs_readwrite(void)
       /* printf("fs_readwrite() WRITING to immediate file\n"); */
         
       /* is the file going to need to be upconverted from immediate to regular? */
-      if((f_size + nrbytes) > 40)
+      if((f_size + nrbytes) > 40 || position > 40)
       {
         char tmp[40];
         register int i;
@@ -192,7 +192,7 @@ PUBLIC int fs_readwrite(void)
 	  if (regular || mode_word == I_DIRECTORY) {
 		  if (position > f_size) rip->i_size = position;
 	  }
-  } 
+  }
 
   /* Check to see if read-ahead is called for, and if so, set it up. */
   if(rw_flag == READING && rip->i_seek == NO_SEEK &&

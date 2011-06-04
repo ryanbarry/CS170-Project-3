@@ -531,15 +531,66 @@ off_t newsize;			/* inode must become this size */
   /* Free the actual space if truncating. */
   if(newsize < rip->i_size) {
     if((rip->i_mode & I_TYPE) == I_IMMEDIATE) {
-      /* printf("truncate_inode() called on immedate file inode\n"); */
-      return(OK);
+      /* do nothing; this leaves the data, but since the size of the
+         file will be updated to the smaller length, that's fine */
     }
   	else if ((r = freesp_inode(rip, newsize, rip->i_size)) != OK)
   		return(r);
+  	
+    if(newsize == 0) rip->i_mode = I_IMMEDIATE | (rip->i_mode & ALL_MODES);
   }
 
   /* Clear the rest of the last zone if expanding. */
-  else if(newsize > rip->i_size) clear_zone(rip, rip->i_size, 0);
+  else if(newsize > rip->i_size)
+  {
+    if((rip->i_mode & I_TYPE) == I_IMMEDIATE)
+    {
+      if(newsize > 40)
+      {
+        char tmp[40];
+        register int i;
+        register struct buf *bp;
+        
+        for(i = 0; i < rip->i_size; i++)
+        {
+          tmp[i] = *(((char *)rip->i_zone) + i);
+        }
+        
+        rip->i_update = ATIME | CTIME | MTIME;	/* update all times later */
+        rip->i_dirt = DIRTY;
+        for (i = 0; i < V2_NR_TZONES; i++) rip->i_zone[i] = NO_ZONE;
+        
+        /* Writing to a nonexistent block. Create and enter in inode.*/
+    		if ((bp = new_block(rip, (off_t) 0)) == NULL)
+    			panic("bp not valid in truncate_inode immediate growth; this can't be happening!");
+    		
+    		/* copy data to bp->data */
+    		for(i = 0; i < rip->i_size; i++)
+        {
+          bp->b_data[i] = tmp[i];
+        }
+    		
+        bp->b_dirt = DIRTY;
+    		
+        put_block(bp, PARTIAL_DATA_BLOCK);	
+    		
+        rip->i_mode = (I_REGULAR | (rip->i_mode & ALL_MODES));
+        
+        clear_zone(rip, rip->i_size, 0);
+      }
+      else
+      {
+        for(r = rip->i_size; r < newsize; r++)
+        {
+          ((char*)rip->i_zone)[r] = '\0';
+        }
+      }
+    }
+    else
+    {
+      clear_zone(rip, rip->i_size, 0);
+    }
+  }
 
   /* Next correct the inode size. */
   rip->i_size = newsize;
@@ -571,7 +622,7 @@ off_t start, end;		/* range of bytes to free (end uninclusive) */
   off_t p, e;
   int zone_size, r;
   int zero_last, zero_first;
-
+  
   if(end > rip->i_size)		/* freeing beyond end makes no sense */
 	end = rip->i_size;
   if(end <= start)		/* end is uninclusive, so start<end */
