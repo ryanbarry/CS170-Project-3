@@ -1,1 +1,3 @@
-Super secret project.
+This was a project for my CS170 Operating Systems class at UCSB.
+
+We had to implement immediate files - if a file is 40 bytes or less, the data is stored directly in the inode - and a new system call, lsr(char *path), that takes the path to a file and lists the processes using that file and the blocks in use to store the file.
